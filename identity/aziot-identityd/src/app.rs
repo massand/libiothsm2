@@ -1,0 +1,82 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+use std::ffi::{OsStr, OsString};
+use std::path::{Path, PathBuf};
+
+use clap::{crate_description, crate_name, crate_version, App, Arg};
+use failure::ResultExt;
+use log::info;
+
+use crate::settings::Settings;
+
+use crate::error::{Error, ErrorKind, InitializeErrorReason};
+use crate::logging;
+
+fn create_app<'a>(
+    default_config_file: &'a OsStr,
+    default_common_config_file: &'a OsStr,
+) -> App<'a, 'a> {
+    App::new(crate_name!())
+        .version(crate_version!())
+        .about(crate_description!())
+        .arg(
+            Arg::with_name("config-file")
+                .short("c")
+                .long("config-file")
+                .value_name("FILE")
+                .help("Sets daemon configuration file")
+                .takes_value(true)
+                .default_value_os(default_config_file),
+        )
+        .arg(
+            Arg::with_name("common-config-file")
+                .short("s")
+                .long("common-config-file")
+                .value_name("COMMON_CONFIG")
+                .help("Sets daemon aziot common configuration")
+                .takes_value(true)
+                .default_value_os(default_common_config_file),
+        )
+}
+
+pub fn init() -> Result<Settings, Error> {
+    let default_config_file = OsString::from("/etc/aziot/identityd/config.toml");
+    let default_common_config_file = OsString::from("/etc/aziot/common/config.toml");
+
+    let matches = create_app(&default_config_file, &default_common_config_file).get_matches();
+
+    logging::init();
+
+    info!("Starting Azure IoT Identity Service Daemon");
+    info!("Version - {}", "1.0");
+
+    let config_file: PathBuf = matches
+        .value_of_os("config-file")
+        .expect("arg has a default value")
+        .to_os_string()
+        .into();
+
+    info!("Using config file: {}", config_file.display());
+
+    let settings = init_idservice(&config_file)?;
+
+    let common_config_file: PathBuf = matches
+        .value_of_os("common-config-file")
+        .expect("arg has a default value")
+        .to_os_string()
+        .into();
+
+    info!("Using common config file: {}", common_config_file.display());
+
+    //TODO: Return a common object and call it for provisioning from IS
+    aziot_common::init(&common_config_file)?;
+
+    Ok(settings)
+}
+
+fn init_idservice(config_file: &Path) -> Result<Settings, Error> {
+    let settings = Settings::new(&config_file)
+        .context(ErrorKind::Initialize(InitializeErrorReason::LoadSettings))?;
+
+    Ok(settings)
+}

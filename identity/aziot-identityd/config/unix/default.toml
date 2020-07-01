@@ -1,0 +1,25 @@
+hostname = "iotedge"
+homedir = "/var/lib/aziot/identityd"
+
+[connect]
+api_uri = "unix:///var/run/aziot/identityd.sock"
+
+[listen]
+api_uri = "unix:///var/run/aziot/identityd.sock"
+
+# Identity service configuration used to associate provisioned device and module identities to host-level processes.
+# This configuration will also be used to generate new module identities, if not created in Azure IoT Hub already.
+#[[principals]]
+#name = "iotedged"
+#idtype = "device"
+#authtype = "user"
+#uid = 1001
+#gid = 1001
+#
+#[[principals]]
+#name = "iotedged"
+#idtype = "module"
+#authtype = "user"
+#uid = 1002
+#gid = 1002
+
