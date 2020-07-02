@@ -1,16 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 use std::ffi::{OsStr, OsString};
-use std::path::{Path, PathBuf};
 
 use clap::{crate_description, crate_name, crate_version, App, Arg};
-use failure::ResultExt;
 use log::info;
 
-use crate::settings::Settings;
-
-use crate::error::{Error, ErrorKind, InitializeErrorReason};
+use crate::error::Error;
 use crate::logging;
+use crate::settings::Settings;
 
 fn create_app<'a>(
     default_config_file: &'a OsStr,
@@ -50,7 +47,7 @@ pub fn init() -> Result<Settings, Error> {
     info!("Starting Azure IoT Identity Service Daemon");
     info!("Version - {}", "1.0");
 
-    let config_file: PathBuf = matches
+    let config_file: std::path::PathBuf = matches
         .value_of_os("config-file")
         .expect("arg has a default value")
         .to_os_string()
@@ -60,7 +57,7 @@ pub fn init() -> Result<Settings, Error> {
 
     let settings = init_idservice(&config_file)?;
 
-    let common_config_file: PathBuf = matches
+    let common_config_file: std::path::PathBuf = matches
         .value_of_os("common-config-file")
         .expect("arg has a default value")
         .to_os_string()
@@ -74,9 +71,8 @@ pub fn init() -> Result<Settings, Error> {
     Ok(settings)
 }
 
-fn init_idservice(config_file: &Path) -> Result<Settings, Error> {
-    let settings = Settings::new(&config_file)
-        .context(ErrorKind::Initialize(InitializeErrorReason::LoadSettings))?;
+fn init_idservice(config_file: &std::path::Path) -> Result<Settings, Error> {
+    let settings = Settings::new(&config_file)?;
 
     Ok(settings)
 }

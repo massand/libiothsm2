@@ -1,12 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-use config::{Config, File, FileFormat};
-use std::path::{Path, PathBuf};
-
-use url::Url;
-
-use crate::error::{ErrorKind, InitializeErrorReason, LoadSettingsError};
-use crate::DEFAULT_AUTO_GENERATED_CA_LIFETIME_DAYS;
+// use config::{Config, File, FileFormat};
+use crate::error::Error;
 
 /// This is the default connection string
 pub const DEFAULT_CONNECTION_STRING: &str = "<ADD DEVICE CONNECTION STRING HERE>";
@@ -16,10 +11,8 @@ pub const DEFAULT_CONNECTION_STRING: &str = "<ADD DEVICE CONNECTION STRING HERE>
 pub struct ManualX509Auth {
     iothub_hostname: String,
     device_id: String,
-    #[serde(with = "url_serde")]
-    identity_cert: Url,
-    #[serde(with = "url_serde")]
-    identity_pk: Url,
+    identity_cert: url::Url,
+    identity_pk: url::Url,
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -135,16 +128,13 @@ impl SymmetricKeyAttestationInfo {
 pub struct X509AttestationInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     registration_id: Option<String>,
-    #[serde(with = "url_serde")]
-    identity_cert: Url,
-    #[serde(with = "url_serde")]
-    identity_pk: Url,
+    identity_cert: url::Url,
+    identity_pk: url::Url,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct Dps {
-    #[serde(with = "url_serde")]
-    global_endpoint: Url,
+    global_endpoint: url::Url,
     scope_id: String,
     attestation: AttestationMethod,
 }
@@ -156,8 +146,7 @@ impl<'de> serde::Deserialize<'de> for Dps {
     {
         #[derive(Debug, serde::Deserialize)]
         struct Inner {
-            #[serde(with = "url_serde")]
-            global_endpoint: Url,
+            global_endpoint: url::Url,
             scope_id: String,
             registration_id: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -190,7 +179,7 @@ impl<'de> serde::Deserialize<'de> for Dps {
 }
 
 impl Dps {
-    pub fn global_endpoint(&self) -> &Url {
+    pub fn global_endpoint(&self) -> &url::Url {
         &self.global_endpoint
     }
 
@@ -206,16 +195,15 @@ impl Dps {
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
 pub struct External {
-    #[serde(with = "url_serde")]
-    endpoint: Url,
+    endpoint: url::Url,
 }
 
 impl External {
-    pub fn new(endpoint: Url) -> Self {
+    pub fn new(endpoint: url::Url) -> Self {
         External { endpoint }
     }
 
-    pub fn endpoint(&self) -> &Url {
+    pub fn endpoint(&self) -> &url::Url {
         &self.endpoint
     }
 }
@@ -250,42 +238,23 @@ pub enum ProvisioningType {
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct Certificates {
-    #[serde(flatten)]
-    device_cert: Option<DeviceCertificate>,
-    #[serde(default = "default_auto_generated_ca_lifetime_days")]
-    auto_generated_ca_lifetime_days: u16,
-}
-
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct DeviceCertificate {
     device_ca_cert: String,
     device_ca_pk: String,
     trusted_ca_certs: String,
 }
 
-fn default_auto_generated_ca_lifetime_days() -> u16 {
-    DEFAULT_AUTO_GENERATED_CA_LIFETIME_DAYS
-}
-
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Settings {
     provisioning: Provisioning,
     hostname: String,
-    homedir: PathBuf,
+    homedir: std::path::PathBuf,
 }
 
 impl Settings {
-    pub fn new(filename: &Path) -> Result<Self, LoadSettingsError> {
-        let mut config = Config::default();
-        config.merge(File::new(
-            filename
-                .to_str()
-                .ok_or(ErrorKind::Initialize(InitializeErrorReason::LoadSettings))?,
-            FileFormat::Toml,
-        ))?;
-
-        let settings = config.try_into()?;
+    pub fn new(filename: &std::path::Path) -> Result<Self, Error> {
+        let settings = std::fs::read_to_string(filename).map_err(|err| Error::LoadSettings(err))?;
+        let settings = toml::from_str(&settings).map_err(|err| Error::ParseSettings(err))?;
 
         Ok(settings)
     }

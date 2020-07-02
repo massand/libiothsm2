@@ -21,6 +21,6 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn read_is_settings() -> Result<aziot_identityd::settings::Settings, Box<dyn std::error::Error>> {
-    let settings = aziot_identityd::app::init().expect("configuration invalid");
+    let settings = aziot_identityd::app::init()?;
     Ok(settings)
 }

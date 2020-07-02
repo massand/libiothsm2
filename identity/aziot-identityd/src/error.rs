@@ -1,79 +1,47 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-use std::fmt;
-use std::fmt::Display;
-
-use aziot_common::error::Error as CoreError;
-use failure::{Backtrace, Context, Fail};
-
-#[derive(Debug)]
-pub struct Error {
-    inner: Context<ErrorKind>,
+pub enum Error {
+    LoadCommonSettings(aziot_common::error::Error),
+    LoadSettings(std::io::Error),
+    ParseSettings(toml::de::Error),
 }
 
-#[derive(Clone, Debug, Fail, PartialEq)]
-pub enum ErrorKind {
-    #[fail(display = "The service could not start up successfully: {}", _0)]
-    Initialize(InitializeErrorReason),
-}
-
-impl Error {
-    pub fn kind(&self) -> &ErrorKind {
-        self.inner.get_context()
-    }
-}
-
-impl Fail for Error {
-    fn cause(&self) -> Option<&dyn Fail> {
-        self.inner.cause()
-    }
-
-    fn backtrace(&self) -> Option<&Backtrace> {
-        self.inner.backtrace()
-    }
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.inner, f)
-    }
-}
-
-impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Self {
-        Error {
-            inner: Context::new(kind),
-        }
-    }
-}
-
-impl From<CoreError> for Error {
-    fn from(error: CoreError) -> Self {
-        let error_kind = ErrorKind::Initialize(InitializeErrorReason::InvalidDeviceConfig);
-        Error::from(error.context(error_kind))
-    }
-}
-
-impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Self {
-        Error { inner }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum InitializeErrorReason {
-    InvalidDeviceConfig,
-    LoadSettings,
-}
-
-impl fmt::Display for InitializeErrorReason {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            InitializeErrorReason::InvalidDeviceConfig => {
-                write!(f, "Invalid device configuration was provided")
-            }
-
-            InitializeErrorReason::LoadSettings => write!(f, "Could not load settings"),
+            Error::LoadCommonSettings(_) => f.write_str("could not load common settings"),
+            Error::LoadSettings(_) => f.write_str("could not load settings"),
+            Error::ParseSettings(_) => f.write_str("could not parse settings"),
         }
     }
+}
+
+impl std::fmt::Debug for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{}", self)?;
+
+        let mut source = std::error::Error::source(self);
+        while let Some(err) = source {
+            writeln!(f, "caused by: {}", err)?;
+            source = err.source();
+        }
+
+        Ok(())
+    }
+}
+
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::LoadCommonSettings(err) => Some(err),
+            Error::LoadSettings(err) => Some(err),
+            Error::ParseSettings(err) => Some(err),
+        }
+    }
+}
+
+impl From<aziot_common::error::Error> for Error {
+	fn from(err: aziot_common::error::Error) -> Self {
+		Error::LoadCommonSettings(err)
+	}
 }

@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-use crate::error::{Error, ErrorKind, InitializeErrorReason};
-use config::{Config, File, FileFormat};
-use failure::{Context, Fail};
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Display;
 use std::path::Path;
-// use std::path::{Path, PathBuf};
 use std::str::FromStr;
+
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use url::Url;
-use url_serde;
+
+use crate::error::Error;
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Settings {
@@ -18,16 +16,9 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new(filename: &Path) -> Result<Self, LoadSettingsError> {
-        let mut config = Config::default();
-        config.merge(File::new(
-            filename
-                .to_str()
-                .ok_or(ErrorKind::Initialize(InitializeErrorReason::LoadSettings))?,
-            FileFormat::Toml,
-        ))?;
-
-        let settings = config.try_into()?;
+    pub fn new(filename: &Path) -> Result<Self, Error> {
+        let settings = std::fs::read_to_string(filename).map_err(|err| Error::LoadSettings(err))?;
+        let settings = toml::from_str(&settings).map_err(|err| Error::ParseSettings(err))?;
 
         Ok(settings)
     }
@@ -35,7 +26,6 @@ impl Settings {
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Connect {
-    #[serde(with = "url_serde")]
     api_uri: Url,
 }
 
@@ -47,7 +37,6 @@ impl Connect {
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Listen {
-    #[serde(with = "url_serde")]
     api_uri: Url,
     #[serde(default = "Protocol::default")]
     min_tls_version: Protocol,
@@ -116,46 +105,6 @@ impl Serialize for Protocol {
         S: Serializer,
     {
         serializer.serialize_str(&format!("{}", self))
-    }
-}
-
-#[derive(Debug, Fail)]
-#[fail(display = "Could not load settings")]
-pub struct LoadSettingsError(#[cause] Context<Box<dyn std::fmt::Display + Send + Sync>>);
-
-impl From<std::io::Error> for LoadSettingsError {
-    fn from(err: std::io::Error) -> Self {
-        LoadSettingsError(Context::new(Box::new(err)))
-    }
-}
-
-impl From<config::ConfigError> for LoadSettingsError {
-    fn from(err: config::ConfigError) -> Self {
-        LoadSettingsError(Context::new(Box::new(err)))
-    }
-}
-
-impl From<serde_json::Error> for LoadSettingsError {
-    fn from(err: serde_json::Error) -> Self {
-        LoadSettingsError(Context::new(Box::new(err)))
-    }
-}
-
-impl From<Error> for LoadSettingsError {
-    fn from(err: Error) -> Self {
-        LoadSettingsError(Context::new(Box::new(err)))
-    }
-}
-
-impl From<Context<ErrorKind>> for LoadSettingsError {
-    fn from(inner: Context<ErrorKind>) -> Self {
-        From::from(Error::from(inner))
-    }
-}
-
-impl From<ErrorKind> for LoadSettingsError {
-    fn from(kind: ErrorKind) -> Self {
-        From::from(Error::from(kind))
     }
 }
 
