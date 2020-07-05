@@ -20,6 +20,8 @@ toml = "0.5"
 url = "2"
 
 aziot-common = { path = "../../common/aziot-common" }
+aziot-identity-common = { path = "../aziot-identity-common" }
+aziot-identity-common-http = { path = "../aziot-identity-common-http" }
 
 [dev-dependencies]
 test-case = "1.0.0"
