@@ -12,3 +12,17 @@ pub fn init(config_file: &Path) -> Result<Settings, Error> {
 
     Ok(settings)
 }
+
+pub struct Provisioner { }
+
+impl Provisioner {
+    pub fn new() -> Result<Self, Error> { 
+        Ok(Provisioner {} )
+    }
+}
+
+impl Provisioner {
+    pub fn provision() -> Result<bool, Error> { 
+        Ok(true)
+    }
+}
