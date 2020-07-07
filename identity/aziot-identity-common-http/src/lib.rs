@@ -138,3 +138,8 @@ pub mod encrypt {
 		pub ciphertext: http_common::ByteString,
 	}
 }
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct Error {
+	pub message: std::borrow::Cow<'static, str>,
+}

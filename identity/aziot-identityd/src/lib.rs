@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 pub mod app;
-mod error;
+pub mod error;
 mod logging;
 pub mod settings;
 
-pub use error::Error;
+pub use error::InternalError;
 
 pub struct Server {}
 
