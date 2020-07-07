@@ -3,10 +3,8 @@
 pub mod get_caller_identity {
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Response {
-        #[serde(rename = "type")]
-        pub id_type: aziot_identity_common::IdentityType,
-        #[serde(rename = "spec")]
-        pub id_spec: aziot_identity_common::IdentitySpec,
+        #[serde(flatten)]
+        pub identity: aziot_identity_common::Identity,
     }
 }
 
@@ -20,18 +18,9 @@ pub mod get_device_identity {
 
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Response {
-        #[serde(rename = "type")]
-        pub id_type: aziot_identity_common::IdentityType,
-        #[serde(rename = "spec")]
-        pub id_spec: aziot_identity_common::IdentitySpec,
+        #[serde(flatten)]
+        pub identity: aziot_identity_common::Identity,
     }
-}
-
-
-pub mod get_module_identities {
-    pub struct Request {}
-
-    pub struct Response {}
 }
 
 
@@ -45,42 +34,52 @@ pub mod create_module_identity {
         #[serde(rename = "moduleId")]
         pub module_id: Option<aziot_identity_common::ModuleId>,
     }
-
+    
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Response {
-        #[serde(rename = "type")]
-        pub id_type: aziot_identity_common::IdentityType,
-        #[serde(rename = "spec")]
-        pub id_spec: aziot_identity_common::IdentitySpec,
+        #[serde(flatten)]
+        pub identity: aziot_identity_common::Identity,
+    }
+}
+
+
+pub mod get_module_identities {
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct Response {
+        pub identities: Vec<aziot_identity_common::Identity>,
     }
 }
 
 
 pub mod get_module_identity {
-    pub struct Request {}
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct Request {
+        #[serde(rename = "moduleId")]
+        pub module_id: aziot_identity_common::ModuleId,
+    }
 
-    pub struct Response {}
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct Response {
+        #[serde(flatten)]
+        pub identity: aziot_identity_common::Identity,
+    }
 }
 
 
 pub mod delete_module_identity {
-    pub struct Request {}
-
-    pub struct Response {}
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct Request {
+        #[serde(rename = "moduleId")]
+        pub module_id: aziot_identity_common::ModuleId,
+    }
 }
-
-
-pub mod reprovision_device {
-    pub struct Request {}
-
-    pub struct Response {}
-}
-
 
 pub mod get_trust_bundle {
-    pub struct Request {}
-
-    pub struct Response {}
+    #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+    pub struct Pem(pub Vec<u8>);
+    pub struct Response {
+        pub certificate: Pem,
+    }
 }
 
 

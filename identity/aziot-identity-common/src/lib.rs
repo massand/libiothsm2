@@ -8,6 +8,14 @@ pub struct ModuleId(pub String);
 pub struct GenId(pub String);
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct Identity {
+    #[serde(rename = "type")]
+    pub id_type: IdentityType,
+    #[serde(rename = "spec")]
+    pub id_spec: IdentitySpec,
+}
+
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum IdentityType {
     Aziot,
 }
