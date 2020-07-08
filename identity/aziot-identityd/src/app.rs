@@ -11,7 +11,6 @@ use crate::settings::Settings;
 
 fn create_app<'a>(
     default_config_file: &'a OsStr,
-    default_common_config_file: &'a OsStr,
 ) -> App<'a, 'a> {
     App::new(crate_name!())
         .version(crate_version!())
@@ -25,22 +24,12 @@ fn create_app<'a>(
                 .takes_value(true)
                 .default_value_os(default_config_file),
         )
-        .arg(
-            Arg::with_name("common-config-file")
-                .short("s")
-                .long("common-config-file")
-                .value_name("COMMON_CONFIG")
-                .help("Sets daemon aziot common configuration")
-                .takes_value(true)
-                .default_value_os(default_common_config_file),
-        )
 }
 
 pub fn init() -> Result<Settings, Error> {
     let default_config_file = OsString::from("/etc/aziot/identityd/config.toml");
-    let default_common_config_file = OsString::from("/etc/aziot/common/config.toml");
 
-    let matches = create_app(&default_config_file, &default_common_config_file).get_matches();
+    let matches = create_app(&default_config_file).get_matches();
 
     logging::init();
 
@@ -57,16 +46,8 @@ pub fn init() -> Result<Settings, Error> {
 
     let settings = init_idservice(&config_file)?;
 
-    let common_config_file: std::path::PathBuf = matches
-        .value_of_os("common-config-file")
-        .expect("arg has a default value")
-        .to_os_string()
-        .into();
-
-    info!("Using common config file: {}", common_config_file.display());
-
     //TODO: Return a common object and call it for provisioning from IS
-    aziot_common::init(&common_config_file)?;
+    aziot_common::init(&config_file)?;
 
     Ok(settings)
 }

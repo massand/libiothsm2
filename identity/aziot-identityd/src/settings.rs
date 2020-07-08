@@ -11,8 +11,13 @@ use crate::error::Error;
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Settings {
-    connect: Connect,
-    listen: Listen,
+    pub connect: Connect,
+    
+    pub listen: Listen,
+    
+    pub hostname: String,
+
+    pub homedir: std::path::PathBuf,
 }
 
 impl Settings {
@@ -26,30 +31,14 @@ impl Settings {
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Connect {
-    api_uri: Url,
-}
-
-impl Connect {
-    pub fn api_uri(&self) -> &Url {
-        &self.api_uri
-    }
+    pub api_uri: Url,
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Listen {
-    api_uri: Url,
+    pub api_uri: Url,
     #[serde(default = "Protocol::default")]
-    min_tls_version: Protocol,
-}
-
-impl Listen {
-    pub fn api_uri(&self) -> &Url {
-        &self.api_uri
-    }
-
-    pub fn min_tls_version(&self) -> Protocol {
-        self.min_tls_version
-    }
+    pub min_tls_version: Protocol,
 }
 
 //TODO: Keeping this setting around until it is determined HTTPS isn't supported
