@@ -11,7 +11,9 @@ edition = "2018"
 [dependencies]
 clap = "2.31"
 env_logger = "0.5"
-hyper = "0.12"
+futures-util = { version = "0.3", features = [] }
+http = "0.2"
+hyper = "0.13"
 log = "0.4"
 tokio = { version = "0.2", features = ["macros"] }
 serde = { version = "1", features = ["derive"] }
@@ -20,6 +22,8 @@ toml = "0.5"
 url = "2"
 
 aziot-common = { path = "../../common/aziot-common" }
+aziot-identity-common = { path = "../aziot-identity-common" }
+aziot-identity-common-http = { path = "../aziot-identity-common-http" }
 
 [dev-dependencies]
 test-case = "1.0.0"
