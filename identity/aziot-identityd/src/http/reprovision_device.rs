@@ -1,16 +1,18 @@
+use url::form_urlencoded::Target;
+
 pub(super) fn handle(
     req: hyper::Request<hyper::Body>,
     _inner: std::sync::Arc<aziot_identityd::Server>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<hyper::Response<hyper::Body>, hyper::Request<hyper::Body>>> + Send>> {
     Box::pin(async move {
-        if req.uri().path() != "/trust-bundle" {
+        if req.uri().path() != "/identities/device/reprovision" {
             return Err(req);
         }
 
         let (http::request::Parts { method, headers, .. }, _body) = req.into_parts();
         let content_type = headers.get(hyper::header::CONTENT_TYPE).and_then(|value| value.to_str().ok());
 
-        if method != hyper::Method::GET {
+        if method != hyper::Method::POST {
             return Ok(super::err_response(
                 hyper::StatusCode::METHOD_NOT_ALLOWED,
                 Some((hyper::header::ALLOW, "POST")),
@@ -28,13 +30,7 @@ pub(super) fn handle(
 
         //TODO: Parse request, execute and respond
 
-        let res = aziot_identity_common_http::get_trust_bundle::Response {
-            certificate: aziot_identity_common_http::get_trust_bundle::Pem { 0: std::vec::Vec::default() }
-        };
-
-        let res = super::json_response(hyper::StatusCode::OK, &res);
+        let res = super::json_response(hyper::StatusCode::OK, String::from("").as_mut_string());
         Ok(res)
-
-        }
-    )
+    })
 }

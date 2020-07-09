@@ -1,5 +1,8 @@
-mod get_module_identity;
+use aziot_identity_common::IdentityType::Aziot;
+use aziot_identity_common::AuthenticationType;
+
 mod get_module_identities;
+mod get_module_identity;
 mod delete_module_identity;
 mod get_trust_bundle;
 mod decrypt;
@@ -7,6 +10,7 @@ mod encrypt;
 mod create_module_identity;
 mod get_device_identity;
 mod get_caller_identity;
+mod reprovision_device;
 
 pub(crate) struct Server {
 	pub(crate) inner: std::sync::Arc<aziot_identityd::Server>,
@@ -35,8 +39,8 @@ impl hyper::service::Service<hyper::Request<hyper::Body>> for Server {
 
 		Box::pin(async move {
 			const ROUTES: &[Route] = &[
-				get_module_identity::handle,
-                get_module_identities::handle,
+				get_module_identities::handle,
+                get_module_identity::handle,
                 delete_module_identity::handle,
                 get_trust_bundle::handle,
                 decrypt::handle,
@@ -44,6 +48,7 @@ impl hyper::service::Service<hyper::Request<hyper::Body>> for Server {
                 create_module_identity::handle,
                 get_device_identity::handle,
                 get_caller_identity::handle,
+				reprovision_device::handle,
 			];
 
 			log::debug!("Received request {:?}", req);
@@ -134,4 +139,38 @@ impl ToHttpResponse for aziot_identityd::error::Error {
 			),
 		}
 	}
+}
+
+fn test_device_identity() -> aziot_identity_common::Identity {
+	return aziot_identity_common::Identity {
+		id_type: Aziot,
+		id_spec: aziot_identity_common::IdentitySpec {
+			hub_name: "dummyHubName".to_string(),
+			device_id: aziot_identity_common::DeviceId("dummyDeviceId".to_string()),
+			module_id: None,
+			gen_id: None,
+			auth: aziot_identity_common::AuthenticationInfo {
+				auth_type: AuthenticationType::SaS,
+				key_handle: aziot_key_common::KeyHandle("dummyKeyHandle".to_string()),
+				cert_id: None,
+			},
+		},
+	};
+}
+
+fn test_module_identity() -> aziot_identity_common::Identity {
+	return aziot_identity_common::Identity {
+		id_type: Aziot,
+		id_spec: aziot_identity_common::IdentitySpec {
+			hub_name: "dummyHubName".to_string(),
+			device_id: aziot_identity_common::DeviceId("dummyDeviceId".to_string()),
+			module_id: Some(aziot_identity_common::ModuleId("dummyModuleId".to_string())),
+			gen_id: Some(aziot_identity_common::GenId("dummyGenId".to_string())),
+			auth: aziot_identity_common::AuthenticationInfo {
+				auth_type: AuthenticationType::SaS,
+				key_handle: aziot_key_common::KeyHandle("dummyKeyHandle".to_string()),
+				cert_id: None,
+			},
+		},
+	};
 }

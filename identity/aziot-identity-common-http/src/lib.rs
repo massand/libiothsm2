@@ -75,8 +75,9 @@ pub mod delete_module_identity {
 }
 
 pub mod get_trust_bundle {
-    #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+    #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd, serde::Deserialize, serde::Serialize)]
     pub struct Pem(pub Vec<u8>);
+    #[derive(Debug, serde::Deserialize, serde::Serialize)]
     pub struct Response {
         pub certificate: Pem,
     }
