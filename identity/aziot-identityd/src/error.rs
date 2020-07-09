@@ -41,7 +41,7 @@ impl std::error::Error for Error {
 }
 
 impl From<aziot_common::error::Error> for Error {
-	fn from(err: aziot_common::error::Error) -> Self {
-		Error::LoadCommonSettings(err)
-	}
+    fn from(err: aziot_common::error::Error) -> Self {
+        Error::LoadCommonSettings(err)
+    }
 }

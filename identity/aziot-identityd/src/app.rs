@@ -9,9 +9,7 @@ use crate::error::Error;
 use crate::logging;
 use crate::settings::Settings;
 
-fn create_app<'a>(
-    default_config_file: &'a OsStr,
-) -> App<'a, 'a> {
+fn create_app<'a>(default_config_file: &'a OsStr) -> App<'a, 'a> {
     App::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())

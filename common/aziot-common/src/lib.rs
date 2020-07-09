@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-use std::path::Path;
 use crate::error::Error;
 use crate::settings::Settings;
+use std::path::Path;
 
 pub mod error;
 pub mod settings;

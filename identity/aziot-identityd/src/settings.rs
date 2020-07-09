@@ -12,9 +12,9 @@ use crate::error::Error;
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Settings {
     pub connect: Connect,
-    
+
     pub listen: Listen,
-    
+
     pub hostname: String,
 
     pub homedir: std::path::PathBuf,
