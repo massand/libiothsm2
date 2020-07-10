@@ -20,9 +20,9 @@ pub struct AzureIoTSpec {
     pub hub_name: String,
     #[serde(rename = "deviceId")]
     pub device_id: DeviceId,
-    #[serde(rename = "moduleId")]
+    #[serde(rename = "moduleId", skip_serializing_if = "Option::is_none")]
     pub module_id: Option<ModuleId>,
-    #[serde(rename = "genId")]
+    #[serde(rename = "genId", skip_serializing_if = "Option::is_none")]
     pub gen_id: Option<GenId>,
     #[serde(rename = "auth")]
     pub auth: AuthenticationInfo
@@ -34,7 +34,7 @@ pub struct AuthenticationInfo {
     pub auth_type: AuthenticationType,
     #[serde(rename = "keyHandle")]
     pub key_handle: aziot_key_common::KeyHandle,
-    #[serde(rename = "certId")]
+    #[serde(rename = "certId", skip_serializing_if = "Option::is_none")]
     pub cert_id: Option<String>,
 }
 
