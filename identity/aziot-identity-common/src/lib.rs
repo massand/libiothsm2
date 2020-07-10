@@ -8,21 +8,14 @@ pub struct ModuleId(pub String);
 pub struct GenId(pub String);
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct Identity {
-    #[serde(rename = "type")]
-    pub id_type: IdentityType,
-    #[serde(rename = "spec")]
-    pub id_spec: IdentitySpec,
-}
-
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum IdentityType {
-    Aziot,
+#[serde(tag = "type", content = "spec")]
+pub enum Identity {
+    Aziot(AzureIoTSpec),
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct IdentitySpec { 
+pub struct AzureIoTSpec {
     #[serde(rename = "hubName")]
     pub hub_name: String,
     #[serde(rename = "deviceId")]

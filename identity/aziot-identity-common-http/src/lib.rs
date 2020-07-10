@@ -13,7 +13,7 @@ pub mod get_device_identity {
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Request {
         #[serde(rename = "type")]
-        pub id_type: aziot_identity_common::IdentityType,
+        pub id_type: String,
     }
 
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -28,7 +28,7 @@ pub mod create_module_identity {
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Request {
         #[serde(rename = "type")]
-        pub id_type: aziot_identity_common::IdentityType,
+        pub id_type: String,
         #[serde(rename = "deviceId")]
         pub device_id: aziot_identity_common::DeviceId,
         #[serde(rename = "moduleId")]
