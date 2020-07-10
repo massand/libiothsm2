@@ -45,6 +45,12 @@ pub mod create_module_identity {
 
 pub mod get_module_identities {
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct Request {
+        #[serde(rename = "type")]
+        pub id_type: String,
+    }
+
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Response {
         pub identities: Vec<aziot_identity_common::Identity>,
     }

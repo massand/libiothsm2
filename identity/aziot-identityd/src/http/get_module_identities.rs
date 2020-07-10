@@ -1,8 +1,6 @@
-use crate::http::test_module_identity;
-
 pub(super) fn handle(
     req: hyper::Request<hyper::Body>,
-    _inner: std::sync::Arc<aziot_identityd::Server>,
+    inner: std::sync::Arc<aziot_identityd::Server>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<hyper::Response<hyper::Body>, hyper::Request<hyper::Body>>> + Send>> {
     Box::pin(async move {
         if req.uri().path() != "/identities/modules" {
@@ -48,7 +46,10 @@ pub(super) fn handle(
         //     )),
         // };
 
-        let res = vec![test_module_identity()];
+        let res = match inner.get_module_identities(String::from("aziot")).await {
+            Ok(v) => v,
+            Err(err) => return Ok(super::ToHttpResponse::to_http_response(&err)),
+        };
         let res = aziot_identity_common_http::get_module_identities::Response { identities: res };
 
         let res = super::json_response(hyper::StatusCode::OK, &res);

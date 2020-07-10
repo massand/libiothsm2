@@ -5,7 +5,9 @@ pub(super) fn handle(
     _inner: std::sync::Arc<aziot_identityd::Server>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<hyper::Response<hyper::Body>, hyper::Request<hyper::Body>>> + Send>> {
     Box::pin(async move {
-        if req.uri().path() != "/identities/module" {
+
+        //TODO: Regex moduleid
+        if req.uri().path() != "/identities/modules/moduleid" {
             return Err(req);
         }
 
