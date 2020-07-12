@@ -22,7 +22,7 @@ impl Server {
 }
 
 impl Server {
-    pub async fn get_module_identity() -> Result<aziot_identity_common::Identity, Error> {
+    pub fn get_module_identity(&self, _module_id: String) -> Result<aziot_identity_common::Identity, Error> {
 
         //TODO: match identity type based on uid configuration and get identity from appropriate identity manager (Hub or local)
         let i = aziot_identity_common::Identity::Aziot (
@@ -39,7 +39,7 @@ impl Server {
         Ok(i)
     }
 
-    pub async fn get_module_identities(&self, _idtype: String) -> Result<Vec<aziot_identity_common::Identity>, Error> {
+    pub fn get_module_identities(&self, _idtype: String) -> Result<Vec<aziot_identity_common::Identity>, Error> {
 
         //TODO: get identity type and get identities from appropriate identity manager (Hub or local)
         Ok(vec![aziot_identity_common::Identity::Aziot (
@@ -55,7 +55,7 @@ impl Server {
                 }})])
     }
 
-    pub async fn get_device_identity(_idtype: String) -> Result<Vec<aziot_identity_common::Identity>, Error> {
+    pub fn get_device_identity(&self, _idtype: String) -> Result<Vec<aziot_identity_common::Identity>, Error> {
 
         //TODO: validate identity type for device is always Hub and get identities from provisioning manager (Hub)
         Ok(vec![aziot_identity_common::Identity::Aziot(
@@ -71,27 +71,43 @@ impl Server {
                 }})])
     }
 
-    pub async fn create_identity(id: aziot_identity_common::Identity) -> Result<aziot_identity_common::Identity, Error> {
+    pub fn create_identity(&self, id: aziot_identity_common::Identity) -> Result<aziot_identity_common::Identity, Error> {
 
         //TODO: match identity type based on uid configuration and create and get identity from appropriate identity manager (Hub or local)
         Ok(id)
     }
 
-    pub async fn delete_identity(_id: aziot_identity_common::Identity) -> Result<bool, Error> {
+    pub fn delete_identity(&self, _module_id: String) -> Result<(), Error> {
 
         //TODO: match identity type based on uid configuration and create and get identity from appropriate identity manager (Hub or local)
         Ok(Default::default())
     }
 
-    pub async fn encrypt() -> Result<http_common::ByteString, Error> {
+    pub fn encrypt(
+        &self,
+        _module_id: String,
+        _parameters: aziot_identity_common_http::encrypt::Parameters,
+        _plaintext: &[u8],
+    ) -> Result<Vec<u8>, Error> {
 
         //TODO: match identity type based on uid configuration and create and get identity from appropriate identity manager (Hub or local)
-        Ok(http_common::ByteString::default())
+        Ok(b"test".to_vec())
     }
 
-    pub async fn decrypt() -> Result<http_common::ByteString, Error> {
+    pub fn decrypt(
+        &self,
+        _module_id: String,
+        _parameters: aziot_identity_common_http::decrypt::Parameters,
+        _ciphertext: &[u8],
+    ) -> Result<Vec<u8>, Error> {
 
         //TODO: match identity type based on uid configuration and create and get identity from appropriate identity manager (Hub or local)
-        Ok(http_common::ByteString::default())
+        Ok(b"test".to_vec())
+    }
+
+    pub fn reprovision_device(&self) -> Result<(), Error> {
+
+        //TODO: invoke reprovision
+        Ok(())
     }
 }

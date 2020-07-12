@@ -1,18 +1,32 @@
-use crate::http::test_module_identity;
+lazy_static::lazy_static! {
+	static ref URI_REGEX: regex::Regex =
+		regex::Regex::new("^/identities/modules/(?P<moduleId>[^/]+)$")
+		.expect("hard-coded regex must compile");
+}
 
 pub(super) fn handle(
     req: hyper::Request<hyper::Body>,
-    _inner: std::sync::Arc<aziot_identityd::Server>,
+    inner: std::sync::Arc<aziot_identityd::Server>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<hyper::Response<hyper::Body>, hyper::Request<hyper::Body>>> + Send>> {
     Box::pin(async move {
 
-        //TODO: Regex moduleid
-        if req.uri().path() != "/identities/modules/moduleid" {
-            return Err(req);
-        }
+        let captures = match URI_REGEX.captures(req.uri().path()) {
+            Some(captures) => captures,
+            None => return Err(req),
+        };
 
-        let (http::request::Parts { method, headers, .. }, body) = req.into_parts();
-        let content_type = headers.get(hyper::header::CONTENT_TYPE).and_then(|value| value.to_str().ok());
+        let module_id = &captures["moduleId"];
+        let module_id = percent_encoding::percent_decode_str(module_id).decode_utf8();
+        let module_id = match module_id {
+            Ok(module_id) => module_id.into_owned(),
+            Err(err) => return Ok(super::err_response(
+                hyper::StatusCode::BAD_REQUEST,
+                None,
+                super::error_to_message(&err).into(),
+            )),
+        };
+
+        let (http::request::Parts { method, .. }, _) = req.into_parts();
 
         if method != hyper::Method::GET {
             return Ok(super::err_response(
@@ -22,36 +36,10 @@ pub(super) fn handle(
             ));
         }
 
-        if content_type.as_deref() != Some("application/json") {
-            return Ok(super::err_response(
-                hyper::StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                None,
-                "request body must be application/json".into(),
-            ));
-        }
-
-        let _body = match hyper::body::to_bytes(body).await {
-            Ok(body) => body,
-            Err(err) => return Ok(super::err_response(
-                hyper::StatusCode::BAD_REQUEST,
-                None,
-                super::error_to_message(&err).into(),
-            )),
+        let res = match inner.get_module_identity(module_id) {
+            Ok(v) => v,
+            Err(err) => return Ok(super::ToHttpResponse::to_http_response(&err)),
         };
-
-        //TODO: Parse request, execute and respond
-
-        // let _body: aziot_identity_common_http::get_module_identities::Request = match serde_json::from_slice(&body) {
-        //     Ok(body) => body,
-        //     Err(err) => return Ok(super::err_response(
-        //         hyper::StatusCode::UNPROCESSABLE_ENTITY,
-        //         None,
-        //         super::error_to_message(&err).into(),
-        //     )),
-        // };
-
-        let res = test_module_identity();
-
         let res = aziot_identity_common_http::get_module_identity::Response { identity: res };
 
         let res = super::json_response(hyper::StatusCode::OK, &res);

@@ -1,16 +1,16 @@
-use crate::http::test_module_identity;
-
 pub(super) fn handle(
     req: hyper::Request<hyper::Body>,
-    _inner: std::sync::Arc<aziot_identityd::Server>,
+    inner: std::sync::Arc<aziot_identityd::Server>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<hyper::Response<hyper::Body>, hyper::Request<hyper::Body>>> + Send>> {
     Box::pin(async move {
         if req.uri().path() != "/identities/identity" {
             return Err(req);
         }
 
-        let (http::request::Parts { method, headers, .. }, body) = req.into_parts();
-        let content_type = headers.get(hyper::header::CONTENT_TYPE).and_then(|value| value.to_str().ok());
+        //TODO: Insert caller to module_id mapping lookup here
+        let module_id = String::from("callerid");
+
+        let (http::request::Parts { method, .. }, _) = req.into_parts();
 
         if method != hyper::Method::GET {
             return Ok(super::err_response(
@@ -20,41 +20,13 @@ pub(super) fn handle(
             ));
         }
 
-        if content_type.as_deref() != Some("application/json") {
-            return Ok(super::err_response(
-                hyper::StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                None,
-                "request body must be application/json".into(),
-            ));
-        }
-
-        let _body = match hyper::body::to_bytes(body).await {
-            Ok(body) => body,
-            Err(err) => return Ok(super::err_response(
-                hyper::StatusCode::BAD_REQUEST,
-                None,
-                super::error_to_message(&err).into(),
-            )),
+        let res = match inner.get_module_identity(module_id) {
+            Ok(v) => v,
+            Err(err) => return Ok(super::ToHttpResponse::to_http_response(&err)),
         };
-
-        //TODO: Parse request, execute and respond
-
-        // let _body: aziot_identity_common_http::get_caller_identity::Request = match serde_json::from_slice(&body) {
-        //     Ok(body) => body,
-        //     Err(err) => return Ok(super::err_response(
-        //         hyper::StatusCode::UNPROCESSABLE_ENTITY,
-        //         None,
-        //         super::error_to_message(&err).into(),
-        //     )),
-        // };
-
-        let res = aziot_identity_common_http::get_caller_identity::Response {
-            identity: test_module_identity()
-        };
+        let res = aziot_identity_common_http::get_module_identity::Response { identity: res };
 
         let res = super::json_response(hyper::StatusCode::OK, &res);
         Ok(res)
-
-        }
-    )
+    })
 }

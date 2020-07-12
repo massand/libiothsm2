@@ -10,7 +10,7 @@ pub(super) fn handle(
         let (http::request::Parts { method, headers, .. }, body) = req.into_parts();
         let content_type = headers.get(hyper::header::CONTENT_TYPE).and_then(|value| value.to_str().ok());
 
-        if method != hyper::Method::GET {
+        if method != hyper::Method::DELETE {
             return Ok(super::err_response(
                 hyper::StatusCode::METHOD_NOT_ALLOWED,
                 Some((hyper::header::ALLOW, "POST")),
@@ -35,7 +35,7 @@ pub(super) fn handle(
             )),
         };
 
-        let body: aziot_identity_common_http::get_module_identities::Request = match serde_json::from_slice(&body) {
+        let body: aziot_identity_common_http::delete_module_identity::Request = match serde_json::from_slice(&body) {
             Ok(body) => body,
             Err(err) => return Ok(super::err_response(
                 hyper::StatusCode::UNPROCESSABLE_ENTITY,
@@ -44,15 +44,16 @@ pub(super) fn handle(
             )),
         };
 
-        let res = match inner.get_module_identities(body.id_type) {
-            Ok(v) => v,
+        match inner.delete_identity(body.module_id) {
+            Ok(()) => (),
             Err(err) => return Ok(super::ToHttpResponse::to_http_response(&err)),
         };
-        let res = aziot_identity_common_http::get_module_identities::Response { identities: res };
 
-        let res = super::json_response(hyper::StatusCode::OK, &res);
+        let res =
+            hyper::Response::builder()
+                .status(hyper::StatusCode::NO_CONTENT)
+                .body(Default::default())
+                .expect("cannot fail to serialize hyper response");
         Ok(res)
-
-        }
-    )
+    })
 }

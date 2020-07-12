@@ -34,7 +34,7 @@ pub(super) fn handle(
                 super::error_to_message(&err).into(),
             )),
         };
-        let _body: aziot_identity_common_http::encrypt::Request = match serde_json::from_slice(&body) {
+        let body: aziot_identity_common_http::encrypt::Request = match serde_json::from_slice(&body) {
             Ok(body) => body,
             Err(err) => return Ok(super::err_response(
                 hyper::StatusCode::UNPROCESSABLE_ENTITY,
@@ -43,10 +43,13 @@ pub(super) fn handle(
             )),
         };
 
-        // TODO: Execute and respond
+        let ciphertext = match _inner.encrypt(body.module_id, body.parameters, &body.plaintext.0) {
+            Ok(ciphertext) => ciphertext,
+            Err(err) => return Ok(super::ToHttpResponse::to_http_response(&err)),
+        };
 
         let res = aziot_identity_common_http::encrypt::Response {
-            ciphertext: http_common::ByteString::default(),
+            ciphertext: http_common::ByteString(ciphertext),
         };
         let res = super::json_response(hyper::StatusCode::OK, &res);
         Ok(res)

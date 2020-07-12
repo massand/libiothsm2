@@ -1,16 +1,13 @@
-use url::form_urlencoded::Target;
-
 pub(super) fn handle(
     req: hyper::Request<hyper::Body>,
-    _inner: std::sync::Arc<aziot_identityd::Server>,
+    inner: std::sync::Arc<aziot_identityd::Server>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<hyper::Response<hyper::Body>, hyper::Request<hyper::Body>>> + Send>> {
     Box::pin(async move {
         if req.uri().path() != "/identities/device/reprovision" {
             return Err(req);
         }
 
-        let (http::request::Parts { method, headers, .. }, _body) = req.into_parts();
-        let content_type = headers.get(hyper::header::CONTENT_TYPE).and_then(|value| value.to_str().ok());
+        let (http::request::Parts { method, .. }, _body) = req.into_parts();
 
         if method != hyper::Method::POST {
             return Ok(super::err_response(
@@ -20,17 +17,16 @@ pub(super) fn handle(
             ));
         }
 
-        if content_type.as_deref() != Some("application/json") {
-            return Ok(super::err_response(
-                hyper::StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                None,
-                "request body must be application/json".into(),
-            ));
-        }
+        match inner.reprovision_device() {
+            Ok(()) => (),
+            Err(err) => return Ok(super::ToHttpResponse::to_http_response(&err)),
+        };
 
-        //TODO: Parse request, execute and respond
-
-        let res = super::json_response(hyper::StatusCode::OK, String::from("").as_mut_string());
+        let res =
+            hyper::Response::builder()
+                .status(hyper::StatusCode::NO_CONTENT)
+                .body(Default::default())
+                .expect("cannot fail to serialize hyper response");
         Ok(res)
     })
 }

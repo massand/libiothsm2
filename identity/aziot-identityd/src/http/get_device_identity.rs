@@ -9,22 +9,13 @@ pub(super) fn handle(
             return Err(req);
         }
 
-        let (http::request::Parts { method, headers, .. }, body) = req.into_parts();
-        let content_type = headers.get(hyper::header::CONTENT_TYPE).and_then(|value| value.to_str().ok());
+        let (http::request::Parts { method, .. }, body) = req.into_parts();
 
         if method != hyper::Method::GET {
             return Ok(super::err_response(
                 hyper::StatusCode::METHOD_NOT_ALLOWED,
                 Some((hyper::header::ALLOW, "POST")),
                 "method not allowed".into(),
-            ));
-        }
-
-        if content_type.as_deref() != Some("application/json") {
-            return Ok(super::err_response(
-                hyper::StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                None,
-                "request body must be application/json".into(),
             ));
         }
 

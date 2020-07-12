@@ -76,7 +76,7 @@ pub mod delete_module_identity {
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct Request {
         #[serde(rename = "moduleId")]
-        pub module_id: aziot_identity_common::ModuleId,
+        pub module_id: String,
     }
 }
 
@@ -94,7 +94,7 @@ pub mod decrypt {
 	#[derive(Debug, serde::Deserialize, serde::Serialize)]
 	pub struct Request {
 		#[serde(rename = "moduleid")]
-		pub module_id: aziot_identity_common::ModuleId,
+		pub module_id: String,
 
 		#[serde(flatten)]
 		pub parameters: Parameters,
@@ -122,7 +122,7 @@ pub mod encrypt {
 	#[derive(Debug, serde::Deserialize, serde::Serialize)]
 	pub struct Request {
 		#[serde(rename = "moduleid")]
-		pub module_id: aziot_identity_common::ModuleId,
+		pub module_id: String,
 
 		#[serde(flatten)]
 		pub parameters: Parameters,
@@ -144,6 +144,14 @@ pub mod encrypt {
 	pub struct Response {
 		pub ciphertext: http_common::ByteString,
 	}
+}
+
+pub mod reprovision_device {
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct Request {
+        #[serde(rename = "type")]
+        pub id_type: String,
+    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
